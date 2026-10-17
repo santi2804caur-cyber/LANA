@@ -175,10 +175,14 @@ button.fila:active{background:var(--paper)}
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 13px;font-size:15px;line-height:1.2}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .ayuda{font-size:13px;color:var(--muted);margin:8px 0 0}
-.campos2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.campos2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin:16px 0;align-items:end}
+.campos2>*{min-width:0}
 .campo{display:block}
 .campo span{display:block;font-size:14px;color:var(--muted);font-weight:600;margin-bottom:6px}
-.campo input,.campo textarea{width:100%;border:1px solid var(--line);background:var(--paper);border-radius:12px;padding:11px 12px;font-size:16px;min-height:46px}
+.campo input,.campo textarea{width:100%;max-width:100%;margin:0;border:1px solid var(--line);background:var(--paper);border-radius:12px;padding:11px 12px;font-size:16px;min-height:46px}
+.campo input[type="date"]{-webkit-appearance:none;appearance:none;display:block;min-width:0;max-width:100%;height:46px;line-height:22px;text-align:left}
+.campo input[type="date"]::-webkit-date-and-time-value{text-align:left;margin:0}
+.campo input[type="date"]::-webkit-calendar-picker-indicator{margin:0}
 .campo textarea{min-height:120px;font-size:13px;font-family:ui-monospace,Menlo,monospace}
 .campo+.campo{margin-top:12px}
 .texto-hoja{color:var(--muted);font-size:15px;margin:4px 0 14px}
