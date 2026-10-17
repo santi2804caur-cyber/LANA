@@ -185,6 +185,10 @@ button.fila:active{background:var(--paper)}
 .ajuste-lista{display:grid;gap:8px}
 .estado-sync{display:flex;align-items:center;gap:8px;font-size:14px;padding:12px 14px;background:var(--paper);border-radius:12px;margin-bottom:12px}
 
+.switch{appearance:none;-webkit-appearance:none;width:51px;height:31px;border-radius:16px;background:var(--line);position:relative;flex:none;margin:0;transition:background .2s;cursor:pointer}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.switch:checked{background:var(--verde)}
+.switch:checked::after{transform:translateX(20px)}
 /* Aviso flotante */
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--ink);color:var(--paper);padding:12px 16px;border-radius:14px;font-size:15px;max-width:min(92vw,440px);z-index:30;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;text-align:center}
 .toast.on{opacity:1;transform:translate(-50%,0)}
@@ -856,6 +860,13 @@ function hojaTarjeta(t){
 }
 
 /* ---------- Ajustes y respaldo ---------- */
+const PREF_DIRECTO = 'lana_abrir_apuntar';
+function abrirDirecto(){ try{ return localStorage.getItem(PREF_DIRECTO)==='1'; }catch(e){ return false; } }
+function revisarAtajo(inicio){
+  const pide = location.hash==='#apuntar' || (inicio && abrirDirecto());
+  if (location.hash==='#apuntar'){ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} }
+  if (pide && !(hojaActual && hojaActual.hoja.querySelector('#fMonto'))){ UI.tab='inicio'; UI.mes=mkey(hoyStr()); render(); hojaMovimiento(null); }
+}
 const promesaDescargas = (window.claude && typeof window.claude.use==='function') ? window.claude.use('downloads').catch(()=>null) : Promise.resolve(null);
 function datosRespaldo(){ return JSON.stringify({app:'lana', version:1, exportado:new Date().toISOString(), config:S.config, meses:S.meses}, null, 1); }
 async function exportar(){
@@ -882,6 +893,7 @@ async function restaurarDesde(texto){
 function hojaAjustes(){
   const hoja = abrirHoja('Ajustes', `
     <div class="estado-sync"><span class="pt ${modoNube?'verde':'rosa'}"></span>${modoNube?'Se guarda en este dispositivo y en tu cuenta.':'Se guarda solo en este dispositivo. Haz respaldos de vez en cuando.'}</div>
+    <label class="estado-sync" style="justify-content:space-between;cursor:pointer"><span>Abrir directo en "Apuntar"</span><input type="checkbox" id="aDirecto" class="switch"></label>
     <div class="ajuste-lista">
       <button class="btn btn-sec" id="aExportar">Exportar respaldo</button>
       <label class="btn btn-sec" style="text-align:center;cursor:pointer">Restaurar desde archivo<input type="file" id="aArchivo" accept=".json,application/json,text/plain" hidden></label>
@@ -890,6 +902,9 @@ function hojaAjustes(){
     <h2>Instalar en tu iPhone</h2>
     <p class="texto-hoja">Abre esta página en Safari, toca el botón Compartir y elige "Agregar a pantalla de inicio". Lana aparecerá con su propio ícono.</p>
     <button class="btn-texto peligro" id="aBorrar">Borrar todos mis datos</button>`);
+  const sw = hoja.querySelector('#aDirecto');
+  sw.checked = abrirDirecto();
+  sw.addEventListener('change', ()=>{ try{ localStorage.setItem(PREF_DIRECTO, sw.checked?'1':'0'); }catch(e){} aviso(sw.checked?'Lana abrirá directo en Apuntar':'Lana abrirá en Inicio'); });
   hoja.querySelector('#aExportar').addEventListener('click', exportar);
   hoja.querySelector('#aArchivo').addEventListener('change', e=>{
     const f = e.target.files && e.target.files[0]; if (!f) return;
@@ -934,6 +949,8 @@ document.getElementById('mesSig').addEventListener('click', ()=>{ UI.mes = idxKe
 window.addEventListener('storage', e=>{ if (e.key===LS_KEY){ S = cargarLocal(); render(); } });
 
 render();
+revisarAtajo(true);
+window.addEventListener('hashchange', ()=>revisarAtajo(false));
 iniciarNube();
 })();
 </script>
