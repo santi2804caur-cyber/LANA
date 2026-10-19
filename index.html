@@ -22,21 +22,21 @@
   padding-bottom:env(safe-area-inset-bottom,0px);
   --paper:#EEF1F5; --surface:#FFFFFF; --ink:#141C2E; --muted:#5B677A; --line:#D9DFE7;
   --rosa:#C8006A; --rosa-soft:#FCE4F0; --verde:#0B7A5C; --verde-soft:#DDF3EA;
-  --ambar:#9A6200; --ambar-soft:#FBF0D9; --rojo:#C0262D; --rojo-soft:#FBE3E4;
+  --ambar:#9A6200; --ambar-soft:#FBF0D9; --rojo:#C0262D; --rojo-soft:#FBE3E4; --azul:#2563C9;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --paper:#0D1322; --surface:#161F33; --ink:#EDF1F7; --muted:#97A3B6; --line:#263149;
     --rosa:#FF4DA6; --rosa-soft:#3A1529; --verde:#3DCB9C; --verde-soft:#10322A;
-    --ambar:#F0B63F; --ambar-soft:#3A2C0E; --rojo:#FF6B70; --rojo-soft:#3D1618;
+    --ambar:#F0B63F; --ambar-soft:#3A2C0E; --rojo:#FF6B70; --rojo-soft:#3D1618; --azul:#6EA0FF;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --paper:#0D1322; --surface:#161F33; --ink:#EDF1F7; --muted:#97A3B6; --line:#263149;
   --rosa:#FF4DA6; --rosa-soft:#3A1529; --verde:#3DCB9C; --verde-soft:#10322A;
-  --ambar:#F0B63F; --ambar-soft:#3A2C0E; --rojo:#FF6B70; --rojo-soft:#3D1618;
+  --ambar:#F0B63F; --ambar-soft:#3A2C0E; --rojo:#FF6B70; --rojo-soft:#3D1618; --azul:#6EA0FF;
   color-scheme:dark;
 }
 html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
@@ -193,6 +193,28 @@ button.fila:active{background:var(--paper)}
 .switch::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
 .switch:checked{background:var(--verde)}
 .switch:checked::after{transform:translateX(20px)}
+/* Aviso del día y análisis */
+.aviso-hoy{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;border:0;border-radius:18px;padding:14px 16px;background:var(--surface);color:var(--ink)}
+.aviso-hoy.pago,.aviso-hoy.corte{background:var(--rosa-soft)}
+.aviso-hoy+.aviso-hoy{margin-top:10px}
+.aviso-ico{font-size:22px;line-height:1.25;flex:none}
+.aviso-tit{display:block;margin:0;font-weight:700}
+.aviso-txt{display:block;margin:2px 0 0;font-size:15px;line-height:1.4}
+.aviso-mas{display:block;margin:8px 0 0;font-size:14px;color:var(--rosa);font-weight:600}
+.aviso-hoy .btn-chico{margin-top:10px;background:var(--surface)}
+.lbl-sm{margin:0;color:var(--muted);font-size:14px}
+.cifra{margin:2px 0 6px;font-size:28px;font-weight:800;font-stretch:112%;font-variant-numeric:tabular-nums;line-height:1.15}
+.cambio{margin:0;font-weight:600;font-size:15px}
+.cambio.sube{color:var(--rojo)} .cambio.baja{color:var(--verde)}
+.der{text-align:right;flex:none}
+.der .monto{display:block;margin-bottom:3px}
+.regla-barra{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--paper)}
+.regla-barra span{display:block;height:100%}
+.regla-filas{display:grid;gap:10px;margin-top:14px}
+.regla-fila{display:grid;grid-template-columns:12px 1fr auto auto;gap:10px;align-items:center;font-size:15px}
+.rf-v{font-weight:700;font-variant-numeric:tabular-nums}
+.rf-v.mal{color:var(--rojo)} .rf-v.bien{color:var(--verde)}
+.rf-g{color:var(--muted);font-size:13px;min-width:62px;text-align:right}
 /* Aviso flotante */
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--ink);color:var(--paper);padding:12px 16px;border-radius:14px;font-size:15px;max-width:min(92vw,440px);z-index:30;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;text-align:center}
 .toast.on{opacity:1;transform:translate(-50%,0)}
@@ -239,6 +261,8 @@ const MESC = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov',
 const DIAS = ['dom','lun','mar','mié','jue','vie','sáb'];
 const PALETA = ['#C8006A','#2563C9','#0B8A66','#C77700','#7A3FD9','#DB4B2A','#12899C','#8A6A55','#D04D8F','#5A6B7D','#4E8F1E','#A23B72'];
 const fmt = new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'});
+const fmt0 = new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0});
+const money0 = n => fmt0.format(n||0);
 const money = n => fmt.format(Math.round((n||0)*100)/100);
 const fmtDate = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const hoyStr = () => fmtDate(new Date());
@@ -463,6 +487,7 @@ function alertas(k){
     const fp = fechaPago(t,p);
     const dias = Math.round((fp-hoy)/86400000);
     if (dias<0) out.push({n:'rojo', t:`El pago de ${esc(t.nombre)} (${money(c)}) venció el ${fechaCorta(fp)}. Si ya pagaste, márcalo en Tarjetas.`});
+    else if (dias===0) return;
     else if (dias<=7) out.push({n:'ambar', t:`Paga ${money(c)} de ${esc(t.nombre)} ${dias===0?'hoy':dias===1?'mañana':'antes del '+fechaCorta(fp)} para no generar intereses.`});
   });
   return out;
@@ -471,6 +496,168 @@ function alertasHTML(k){
   const a = alertas(k);
   if (!a.length) return '';
   return `<h2>Pendientes</h2><div class="alertas">${a.map(x=>`<div class="alerta ${x.n}">${x.t}</div>`).join('')}</div>`;
+}
+
+/* ---------- Análisis ---------- */
+const NECESIDADES = ['super','transporte','casa','servicios','salud'];
+function claseDe(c){ return c.clase || (NECESIDADES.includes(c.id) ? 'necesidad' : 'gusto'); }
+const diaDe = f => Number(f.slice(8,10));
+function mesTieneDatos(k){ return !!(S.meses[k] && S.meses[k].movs.length); }
+function mesesPrevios(k,n){ const out=[]; const ki=kidx(k); for (let i=1;i<=n;i++){ const kk=idxKey(ki-i); if (mesTieneDatos(kk)) out.push(kk); } return out; }
+function porCatMap(lista){ const m={}; lista.forEach(x=>{ m[x.cat]=(m[x.cat]||0)+x.monto; }); return m; }
+function infoMes(k){
+  const hoy=hoyStr(); const esActual = k===mkey(hoy);
+  const ki=kidx(k); const diasMes=dim(Math.floor(ki/12), ki%12);
+  return {esActual:esActual, dia: esActual ? diaDe(hoy) : diasMes, diasMes:diasMes};
+}
+function gastosHasta(k,dia){ return gastosDe(k).filter(x => (x.cuota && x.cuota>1) || diaDe(x.m.fecha)<=dia); }
+function promedioCats(k){
+  const previos = mesesPrevios(k,3); const prom={};
+  previos.forEach(pk=>{ const pc=porCatMap(gastosDe(pk)); for (const c in pc) prom[c]=(prom[c]||0)+pc[c]/previos.length; });
+  return {previos:previos, prom:prom};
+}
+function comparacion(k){
+  const im = infoMes(k); const prev = idxKey(kidx(k)-1); const hayPrev = mesTieneDatos(prev);
+  const actual = porCatMap(im.esActual ? gastosHasta(k, im.dia) : gastosDe(k));
+  const anterior = hayPrev ? porCatMap(im.esActual ? gastosHasta(prev, Math.min(im.dia, infoMes(prev).diasMes)) : gastosDe(prev)) : {};
+  const pc = promedioCats(k);
+  const ids = new Set(Object.keys(actual).concat(Object.keys(anterior)));
+  const filas = Array.from(ids).map(id=>({id:id, actual:actual[id]||0, anterior:anterior[id]||0, prom:pc.prom[id]||0})).sort((a,b)=>b.actual-a.actual || b.anterior-a.anterior);
+  const tot = o => Object.keys(o).reduce((a,c)=>a+o[c],0);
+  return {hayPrev:hayPrev, prev:prev, esActual:im.esActual, dia:im.dia, filas:filas, totalActual:tot(actual), totalAnterior:tot(anterior), previos:pc.previos};
+}
+function proyeccion(k){
+  const im = infoMes(k); if (!im.esActual || im.dia<3) return null;
+  const g = gastosDe(k); const fijos = suma(g.filter(x=>x.cuota)); const variables = suma(g.filter(x=>!x.cuota));
+  return fijos + variables/im.dia*im.diasMes;
+}
+function regla(k){
+  const ing = ingresosDe(k); let nec=0, gus=0;
+  gastosDe(k).forEach(x=>{ if (claseDe(catInfo(x.cat))==='necesidad') nec+=x.monto; else gus+=x.monto; });
+  return {ing:ing, nec:nec, gus:gus, ahorro:ing-nec-gus};
+}
+function sugeridos(k){
+  const pc = promedioCats(k); if (!pc.previos.length) return [];
+  return catsDe('gasto').map(c=>{
+    const p = pc.prom[c.id]||0; if (p<50) return null;
+    const sug = Math.ceil(p/50)*50; const actual = c.presupuesto||0;
+    if (actual>0 && Math.abs(actual-sug)/sug < 0.1) return null;
+    return {c:c, prom:p, sug:sug, actual:actual};
+  }).filter(Boolean).sort((a,b)=>b.prom-a.prom);
+}
+function compromisoMsi(k){
+  const g = gastosDe(k).filter(x=>x.cuota); const total = suma(g); const ing = ingresosDe(k);
+  let fin = null; g.forEach(x=>{ const e = kidx(mkey(x.m.fecha))+x.n-1; if (fin===null || e>fin) fin=e; });
+  return {total:total, n:g.length, pct: ing>0 ? total/ing : null, fin: fin===null ? null : idxKey(fin)};
+}
+function consejos(){
+  const k = mkey(hoyStr()); const out = []; const nomMes = MESES[kidx(k)%12];
+  const cmp = comparacion(k);
+  if (cmp.hayPrev){
+    const mesAnt = MESES[kidx(cmp.prev)%12];
+    const sube = cmp.filas.filter(f=>f.anterior>0 && f.actual-f.anterior>200 && (f.actual-f.anterior)/f.anterior>0.2).sort((a,b)=>(b.actual-b.anterior)-(a.actual-a.anterior))[0];
+    if (sube) out.push(`Llevas ${money(sube.actual-sube.anterior)} más en ${catInfo(sube.id).nombre} que a estas alturas de ${mesAnt} (+${Math.round((sube.actual-sube.anterior)/sube.anterior*100)}%).`);
+    const baja = cmp.filas.filter(f=>f.anterior-f.actual>200).sort((a,b)=>(b.anterior-b.actual)-(a.anterior-a.actual))[0];
+    if (baja) out.push(`Vas ${money(baja.anterior-baja.actual)} abajo en ${catInfo(baja.id).nombre} comparado con ${mesAnt}. ¡Bien hecho!`);
+  }
+  const ing = ingresosDe(k); const pr = proyeccion(k);
+  if (pr && ing>0 && pr>ing) out.push(`A este ritmo cerrarás ${nomMes} gastando ${money(pr)}, ${money(pr-ing)} más de lo que entró.`);
+  const r = regla(k);
+  if (r.ing>0){
+    if (r.gus/r.ing>0.3) out.push(`Tus gustos ya son ${Math.round(r.gus/r.ing*100)}% de tu ingreso del mes; la regla 50/30/20 sugiere 30%.`);
+    if (r.nec/r.ing>0.5) out.push(`Tus necesidades son ${Math.round(r.nec/r.ing*100)}% de tu ingreso; la guía sugiere 50%. Revisa si algún servicio o gasto fijo se puede bajar.`);
+    if (r.ahorro/r.ing>=0.2) out.push(`Vas ahorrando ${Math.round(r.ahorro/r.ing*100)}% de tu ingreso este mes. ¡Sigue así!`);
+  }
+  const sg = sugeridos(k).filter(x=>!x.actual)[0];
+  if (sg) out.push(`Ponle límite a ${sg.c.nombre}: según tu promedio, ${money0(sg.sug)} al mes sería realista.`);
+  const ms = compromisoMsi(k);
+  if (ms.pct!==null && ms.pct>0.2) out.push(`Tus mensualidades de MSI ya son ${Math.round(ms.pct*100)}% de tu ingreso. Piénsalo dos veces antes de otra compra a meses.`);
+  if (!out.length){
+    if (!ing) out.push('Registra tus ingresos del mes para saber cuánto te queda y ver tu regla 50/30/20.');
+    if (!S.config.tarjetas.length) out.push('Agrega tus tarjetas de crédito para que Lana te avise el día de corte y el día de pago.');
+    else out.push('Paga el total de tu tarjeta cada mes: el pago mínimo genera intereses.');
+    out.push('Apunta tus gastos el mismo día: así no se te escapa ninguno.');
+    out.push('Al cerrar el mes, revisa tu Resumen para ver en qué se fue tu dinero.');
+  }
+  return out;
+}
+function consejoDelDia(){
+  const l = consejos(); const d = new Date();
+  const n = Math.floor((new Date(d.getFullYear(),d.getMonth(),d.getDate()) - new Date(d.getFullYear(),0,1))/86400000);
+  return l[n % l.length];
+}
+function notificacionesHoy(){
+  const hoy = parseDate(hoyStr()).getTime(); const out = [];
+  S.config.tarjetas.forEach(t=>{
+    const p = periodoHoy(t);
+    if (fechaCorte(t,p).getTime()===hoy){
+      const tot = cargosPeriodo(t,p).total;
+      out.push({tipo:'corte', titulo:`Hoy es fecha de corte de ${t.nombre}`, texto: tot>0.009 ? `Tu periodo cierra con ${money(tot)} aprox. Tienes hasta el ${fechaCorta(fechaPago(t,p))} para pagarlo sin intereses.` : `No tienes cargos en este periodo. Tu próximo pago sería el ${fechaCorta(fechaPago(t,p))}.`});
+    }
+    if (fechaPago(t,p-1).getTime()===hoy){
+      const tot = cargosPeriodo(t,p-1).total; const pagado = (t.pagados||[]).includes(p-1);
+      out.push({tipo:'pago', t:t, p:p-1, pagado:pagado, boton: tot>0.009, titulo:`Hoy es el día de pago de ${t.nombre}`,
+        texto: tot<=0.009 ? 'No tienes nada que pagar de este corte.' : pagado ? `Ya registraste el pago de ${money(tot)}. ¡Listo!` : `Paga ${money(tot)} hoy para no generar intereses.`});
+    }
+  });
+  return out;
+}
+function avisoHoyHTML(){
+  const nots = notificacionesHoy();
+  if (nots.length) return '<div style="margin-top:4px">' + nots.map(n=>`<div class="aviso-hoy ${n.tipo}" role="status"><span class="aviso-ico" aria-hidden="true">${n.tipo==='pago'?'💳':'✂️'}</span><div><p class="aviso-tit">${esc(n.titulo)}</p><p class="aviso-txt">${esc(n.texto)}</p>${n.boton?`<button class="btn btn-chico" data-accion="pagado" data-id="${esc(n.t.id)}" data-p="${n.p}">${n.pagado?'Marcar como no pagado':'Ya lo pagué'}</button>`:''}</div></div>`).join('') + '</div>';
+  return `<button class="aviso-hoy" data-accion="ir-resumen" style="margin-top:4px"><span class="aviso-ico" aria-hidden="true">💡</span><span><span class="aviso-tit">Consejo del día</span><span class="aviso-txt">${esc(consejoDelDia())}</span><span class="aviso-mas">Ver tu análisis completo ›</span></span></button>`;
+}
+function compHTML(k){
+  const c = comparacion(k); const mesAnt = MESES[kidx(c.prev)%12]; const nomMes = MESES[kidx(k)%12];
+  let h = `<h2 style="margin-top:18px">Contra meses anteriores</h2>`;
+  if (!c.hayPrev) return h + `<div class="vacio"><strong>Aún no hay con qué comparar</strong>Vuelve el próximo mes: aquí verás si gastas más o menos que antes.</div>`;
+  const dif = c.totalActual - c.totalAnterior;
+  h += `<div class="panel"><p class="lbl-sm">${c.esActual ? `Al día ${c.dia} llevas` : `Gastaste en ${nomMes}`}</p><p class="cifra">${money(c.totalActual)}</p>`;
+  h += Math.abs(dif)<1 ? `<p class="cambio">Igual que ${c.esActual?`al ${c.dia} de ${mesAnt}`:`en ${mesAnt}`}</p>` : `<p class="cambio ${dif>0?'sube':'baja'}">${dif>0?'▲':'▼'} ${money(Math.abs(dif))} ${dif>0?'más':'menos'} que ${c.esActual?`al ${c.dia} de ${mesAnt}`:`en ${mesAnt}`}</p>`;
+  const pr = proyeccion(k); const ing = ingresosDe(k);
+  if (pr) h += `<p class="ayuda">A este paso cerrarás ${nomMes} en <b style="color:var(--ink)">${money(pr)}</b>${ing>0?`; entró ${money(ing)}`:''}.</p>`;
+  h += `</div><div class="grupo mt">`;
+  h += c.filas.map(f=>{
+    const ci = catInfo(f.id); const d = f.actual-f.anterior;
+    const pill = f.anterior===0 ? '<span class="pill ambar">Nuevo</span>' : Math.abs(d)<1 ? '<span class="pill">Igual</span>' : `<span class="pill ${d>0?'rojo':''}">${d>0?'▲':'▼'} ${Math.abs(Math.round(d/f.anterior*100))}%</span>`;
+    return `<div class="fila"><span class="emo" aria-hidden="true">${esc(ci.emoji)}</span><span class="txt"><span class="t1">${esc(ci.nombre)}</span><span class="t2" style="white-space:normal">${cap(mesAnt)}: ${money(f.anterior)}${c.previos.length>1?`, promedio mensual ${money(f.prom)}`:''}</span></span><span class="der"><span class="monto">${money(f.actual)}</span>${pill}</span></div>`;
+  }).join('');
+  return h + `</div>${c.esActual?`<p class="ayuda">Comparamos contra lo que llevabas al día ${c.dia} de ${mesAnt}, para que sea justo.</p>`:''}`;
+}
+function reglaHTML(k){
+  const r = regla(k); let h = `<h2>Regla 50/30/20</h2>`;
+  if (r.ing<=0) return h + `<div class="vacio"><strong>Registra tus ingresos</strong>Con lo que entró en el mes calculamos cuánto va a necesidades, gustos y ahorro.</div>`;
+  const pn = r.nec/r.ing*100, pg = r.gus/r.ing*100, pa = r.ahorro/r.ing*100;
+  const base = Math.max(100, Math.max(0,pn)+Math.max(0,pg)+Math.max(0,pa));
+  const w = v => (Math.max(0,v)/base*100).toFixed(2);
+  const filas = [
+    {n:'Necesidades', v:pn, g:'guía 50%', color:'var(--azul)', ok: pn<=50},
+    {n:'Gustos', v:pg, g:'guía 30%', color:'var(--rosa)', ok: pg<=30},
+    {n:'Ahorro', v:pa, g:'guía 20%', color:'var(--verde)', ok: pa>=20}
+  ];
+  h += `<div class="panel"><div class="regla-barra" role="img" aria-label="Necesidades ${Math.round(pn)}%, gustos ${Math.round(pg)}%, ahorro ${Math.round(pa)}%"><span style="width:${w(pn)}%;background:var(--azul)"></span><span style="width:${w(pg)}%;background:var(--rosa)"></span><span style="width:${w(pa)}%;background:var(--verde)"></span></div><div class="regla-filas">`;
+  h += filas.map(f=>`<div class="regla-fila"><span class="sw" style="background:${f.color}"></span><span>${f.n}</span><span class="rf-v ${f.ok?'bien':'mal'}">${Math.round(f.v)}%</span><span class="rf-g">${f.g}</span></div>`).join('');
+  h += `</div>${infoMes(k).esActual?'<p class="ayuda">El mes aún no termina, así que estos porcentajes van a cambiar.</p>':''}<p class="ayuda">Para cambiar si una categoría es necesidad o gusto, ve a Presupuesto y tócala.</p></div>`;
+  return h;
+}
+function sugeridosHTML(k){
+  let h = `<h2>Presupuestos sugeridos</h2>`;
+  if (!mesesPrevios(k,3).length) return h + `<div class="vacio"><strong>Necesitamos al menos un mes de historial</strong>Con lo que gastas normalmente te sugeriremos un límite realista para cada categoría.</div>`;
+  const l = sugeridos(k);
+  if (!l.length) return h + `<div class="vacio"><strong>Tus límites van de acuerdo con lo que gastas</strong>Por ahora no hay ajustes que sugerir.</div>`;
+  h += `<div class="grupo">` + l.map(x=>`<div class="fila"><span class="emo" aria-hidden="true">${esc(x.c.emoji)}</span><span class="txt"><span class="t1">${esc(x.c.nombre)}</span><span class="t2" style="white-space:normal">Promedio ${money(x.prom)}${x.actual?`, tu límite ${money(x.actual)}`:', sin límite'}</span></span><button class="btn btn-chico" data-accion="aplicar-sug" data-id="${esc(x.c.id)}" data-v="${x.sug}">Usar ${money0(x.sug)}</button></div>`).join('') + `</div>`;
+  return h + `<p class="ayuda">Calculado con el promedio de tus últimos meses, redondeado hacia arriba.</p>`;
+}
+function msiHTML(k){
+  const m = compromisoMsi(k); let h = `<h2>Meses sin intereses</h2>`;
+  if (!m.n) return h + `<div class="vacio"><strong>Sin mensualidades este mes</strong>${S.config.tarjetas.length?'Cuando compres a meses, aquí verás qué parte de tu ingreso ya está comprometida.':'Agrega tus tarjetas para llevar el control de tus compras a meses.'}</div>`;
+  let nivel='', txt='';
+  if (m.pct===null) txt = 'Registra tus ingresos para saber qué parte ya está comprometida.';
+  else if (m.pct<0.1) txt = 'Tranquilo: tus mensualidades son una parte pequeña de tu ingreso.';
+  else if (m.pct<=0.2){ nivel='ambar'; txt = 'Con cuidado: piensa bien antes de sumar otra compra a meses.'; }
+  else { nivel='rojo'; txt = 'Alto: una parte importante de tu ingreso ya está comprometida. Mejor evita nuevas compras a meses por ahora.'; }
+  h += `<div class="panel"><p class="lbl-sm">Pagas este mes en mensualidades</p><p class="cifra">${money(m.total)}</p>${m.pct!==null?`<span class="pill ${nivel}">${Math.round(m.pct*100)}% de tu ingreso</span>`:''}<p class="ayuda">${txt}${m.fin?` Tu última mensualidad es en ${nombreMes(m.fin)}.`:''}</p><p class="ayuda">Referencia general: menos de 10% tranquilo, de 10% a 20% con cuidado, más de 20% alto. No es asesoría financiera.</p></div>`;
+  return h;
 }
 
 /* ---------- Vistas ---------- */
@@ -500,6 +687,7 @@ function vInicio(){
     <div class="flujo" role="img" aria-label="Has gastado ${Math.round(pct)} por ciento de lo que entró"><span style="width:${pct}%"></span></div>
     <div class="split"><div><span class="pt verde"></span>Entró<strong>${money(ing)}</strong></div><div><span class="pt rosa"></span>Salió<strong>${money(gastos)}</strong></div></div>
   </section>`;
+  h += avisoHoyHTML();
   h += alertasHTML(k);
   const movs = ((S.meses[k]&&S.meses[k].movs)||[]).slice().sort((a,b)=> b.fecha.localeCompare(a.fecha) || (b.creado||0)-(a.creado||0));
   const cuotasPrevias = g.filter(x=>x.cuota && x.cuota>1);
@@ -551,10 +739,14 @@ function barrasHTML(k){
   return s+'</svg>';
 }
 function vResumen(){
+  const k0 = UI.mes;
+  return compHTML(k0) + reglaHTML(k0) + sugeridosHTML(k0) + msiHTML(k0) + vGraficas();
+}
+function vGraficas(){
   const k = UI.mes; const g = gastosDe(k); const total = suma(g); const ing = ingresosDe(k);
   const mapa = {}; g.forEach(x=>{ mapa[x.cat]=(mapa[x.cat]||0)+x.monto; });
   const porCat = Object.keys(mapa).map(id=>({id:id, monto:mapa[id], color:colorCat(id), c:catInfo(id)})).sort((a,b)=>b.monto-a.monto);
-  let h = `<h2 style="margin-top:18px">En qué se fue tu dinero</h2>`;
+  let h = `<h2>En qué se fue tu dinero</h2>`;
   if (!total){
     h += `<div class="vacio"><strong>Todavía no hay gastos en ${esc(MESES[kidx(k)%12])}</strong>Cuando apuntes gastos, aquí verás cómo se reparten.</div>`;
   } else {
@@ -801,13 +993,17 @@ function hojaCategoria(cat, tipo){
       <label class="campo"><span>Ícono</span><input id="cEmoji" maxlength="4" style="text-align:center;font-size:22px"></label>
       <label class="campo"><span>Nombre</span><input id="cNombre" maxlength="30" placeholder="Ej. Mascotas"></label>
     </div>
-    ${tipo==='gasto'?`<label class="campo"><span>Límite al mes (deja vacío para no poner límite)</span><input id="cPres" inputmode="decimal" placeholder="$0"></label><p class="ayuda">Te avisaremos al llegar al 80% y si te pasas.</p>`:''}
+    ${tipo==='gasto'?`<label class="campo"><span>Límite al mes (deja vacío para no poner límite)</span><input id="cPres" inputmode="decimal" placeholder="$0"></label><p class="ayuda">Te avisaremos al llegar al 80% y si te pasas.</p><p class="etq">Para la regla 50/30/20, ¿qué tipo de gasto es?</p><div class="seg" id="cClase"><button data-clase="necesidad">Necesidad</button><button data-clase="gusto">Gusto</button></div>`:''}
     <button class="btn btn-primario mt" id="cGuardar">${esNueva?'Agregar categoría':'Guardar cambios'}</button>
     ${esNueva?'':'<button class="btn-texto peligro" id="cBorrar">Borrar categoría</button>'}`);
   const $ = s => hoja.querySelector(s);
   $('#cEmoji').value = cat ? cat.emoji : (tipo==='gasto'?'🏷️':'💰');
   $('#cNombre').value = cat ? cat.nombre : '';
   if (tipo==='gasto') $('#cPres').value = cat && cat.presupuesto>0 ? String(cat.presupuesto) : '';
+  let clase = cat ? claseDe(cat) : 'gusto';
+  const pintarClase = () => hoja.querySelectorAll('[data-clase]').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.clase===clase)));
+  hoja.querySelectorAll('[data-clase]').forEach(b=>b.addEventListener('click', ()=>{ clase=b.dataset.clase; pintarClase(); }));
+  pintarClase();
   if (esNueva) $('#cNombre').focus();
   $('#cGuardar').addEventListener('click', ()=>{
     const nombre = $('#cNombre').value.trim();
@@ -815,8 +1011,8 @@ function hojaCategoria(cat, tipo){
     let pres = 0;
     if (tipo==='gasto'){ const v = $('#cPres').value.trim(); if (v){ pres = parseMonto(v); if (!(pres>=0)){ aviso('Revisa el límite: escribe solo números.','ambar'); return; } } }
     const emoji = $('#cEmoji').value.trim() || '🏷️';
-    if (esNueva) S.config.categorias.push({id:nuevoId(), nombre:nombre, emoji:emoji, tipo:tipo, presupuesto:pres});
-    else { const c = S.config.categorias.find(x=>x.id===cat.id); c.nombre=nombre; c.emoji=emoji; if (tipo==='gasto') c.presupuesto=pres; }
+    if (esNueva) S.config.categorias.push(tipo==='gasto' ? {id:nuevoId(), nombre:nombre, emoji:emoji, tipo:tipo, presupuesto:pres, clase:clase} : {id:nuevoId(), nombre:nombre, emoji:emoji, tipo:tipo});
+    else { const c = S.config.categorias.find(x=>x.id===cat.id); c.nombre=nombre; c.emoji=emoji; if (tipo==='gasto'){ c.presupuesto=pres; c.clase=clase; } }
     tocar(['config']); cerrarHoja(); render(); aviso(esNueva?'Categoría agregada':'Cambios guardados');
   });
   if (!esNueva) $('#cBorrar').addEventListener('click', async ()=>{
@@ -937,6 +1133,11 @@ document.getElementById('vista').addEventListener('click', async e=>{
   else if (a==='nueva-cat') hojaCategoria(null, b.dataset.tipo);
   else if (a==='nueva-tarjeta') hojaTarjeta(null);
   else if (a==='editar-tarjeta'){ const t = tarjetaDe(b.dataset.id); if (t) hojaTarjeta(t); }
+  else if (a==='ir-resumen'){ UI.tab='resumen'; UI.mes=mkey(hoyStr()); render(); window.scrollTo(0,0); }
+  else if (a==='aplicar-sug'){
+    const c = S.config.categorias.find(x=>x.id===b.dataset.id); const v = Number(b.dataset.v); if (!c || !(v>0)) return;
+    c.presupuesto = v; tocar(['config']); render(); aviso(`Límite de ${c.nombre}: ${money0(v)} al mes`);
+  }
   else if (a==='pagado'){
     const t = tarjetaDe(b.dataset.id); const p = Number(b.dataset.p); if (!t) return;
     t.pagados = t.pagados || [];
